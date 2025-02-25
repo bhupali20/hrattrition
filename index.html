@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Employee Attrition Prediction</title>
+    <link
+      href="{{ url_for('static', filename='css/bootstrap.css') }}"
+      rel="stylesheet"
+    />
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <style>
+      :root {
+        --primary-color: #1a237e;
+        --secondary-color: #283593;
+        --light-blue: #e8eaf6;
+      }
+
+      body {
+        background-color: var(--light-blue);
+        font-family: "Arial", sans-serif;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .navbar {
+        background-color: var(--primary-color) !important;
+        padding: 1rem 0;
+      }
+
+      .navbar-brand {
+        color: white !important;
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+
+      .main-container {
+        flex: 1;
+        padding: 2rem 0;
+      }
+
+      .prediction-form {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin: 0 auto;
+        max-width: 1200px;
+      }
+
+      .form-title {
+        color: var(--primary-color);
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 2rem;
+      }
+
+      .form-columns {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group strong {
+        color: var(--secondary-color);
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+      }
+
+      .form-group input[type="number"] {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 0.9rem;
+      }
+
+      .radio-group {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .radio-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.9rem;
+      }
+
+      .btn-predict {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        width: 100%;
+        max-width: 300px;
+        margin: 2rem auto;
+        display: block;
+        transition: background-color 0.3s ease;
+      }
+
+      .btn-predict:hover {
+        background-color: var(--secondary-color);
+      }
+
+      .prediction-result {
+        text-align: center;
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        margin-top: 2rem;
+        padding: 1rem;
+        background-color: var(--light-blue);
+        border-radius: 5px;
+      }
+
+      footer {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 1rem 0;
+        text-align: center;
+        margin-top: 2rem;
+      }
+
+      footer a {
+        color: white;
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        color: var(--light-blue);
+      }
+
+      @media (max-width: 768px) {
+        .form-columns {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Navbar Main -->
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+          <img
+            src="https://placeholder.pics/svg/40/3456DB/FFFFFF/logo"
+            alt="Logo"
+            width="40"
+            height="40"
+            class="d-inline-block align-text-top"
+          />
+          RecruitEase
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div
+          class="collapse navbar-collapse justify-content-center"
+          id="navbarSupportedContent"
+        >
+          <ul class="navbar-nav mx-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="#"
+                ><i class="bi bi-house-door"></i> Home</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#"
+                ><i class="bi bi-grid-3x3-gap"></i> Dashboard</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#"
+                ><i class="bi bi-briefcase"></i> Job Prediction</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#"
+                ><i class="bi bi-file-text"></i> Resume Score</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#"
+                ><i class="bi bi-info-circle"></i> About Us</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Add this CSS to your style section -->
+    <style>
+      .navbar {
+        background-color: white !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .navbar-brand {
+        display: flex;
+        align-items: center;
+        font-weight: bold;
+        color: #2b69e6 !important;
+      }
+
+      .navbar .nav-link {
+        color: #555;
+        margin: 0 10px;
+        font-weight: 500;
+      }
+
+      .navbar .nav-link:hover {
+        color: #2b69e6;
+      }
+
+      .navbar .nav-link i {
+        margin-right: 5px;
+      }
+    </style>
+
+    <!-- Main Content -->
+    <div class="main-container">
+      <div class="container">
+        <div class="prediction-form">
+          <h1 class="form-title">Employee Attrition Prediction</h1>
+
+          <form
+            action="{{ url_for('predict')}}"
+            method="POST"
+            autocomplete="on"
+          >
+            <div class="form-columns">
+              <!-- Left Column -->
+              <div class="column">
+                <div class="form-group">
+                  <strong>Age</strong>
+                  <input
+                    type="number"
+                    name="Age"
+                    placeholder="18-80"
+                    required
+                    min="18"
+                    max="80"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Business Travel</strong>
+                  <div class="radio-group">
+                    <label
+                      ><input
+                        type="radio"
+                        name="BusinessTravel"
+                        value="Rarely"
+                      />
+                      Rarely</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="BusinessTravel"
+                        value="Frequently"
+                      />
+                      Frequently</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="BusinessTravel"
+                        value="No Travel"
+                      />
+                      No Travel</label
+                    >
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <strong>Daily Rate</strong>
+                  <input
+                    type="number"
+                    name="Daily Rate"
+                    placeholder="100-1600"
+                    required
+                    min="100"
+                    max="1600"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Distance From Home</strong>
+                  <input
+                    type="number"
+                    name="Distance From Home"
+                    placeholder="1-29"
+                    required
+                    min="1"
+                    max="29"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Education</strong>
+                  <input
+                    type="number"
+                    name="Education"
+                    placeholder="1-5"
+                    required
+                    min="1"
+                    max="5"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Environment Satisfaction</strong>
+                  <input
+                    type="number"
+                    name="Environment Satisfaction"
+                    placeholder="1-4"
+                    required
+                    min="1"
+                    max="4"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Gender</strong>
+                  <div class="radio-group">
+                    <label
+                      ><input type="radio" name="Gender" value="Male" />
+                      Male</label
+                    >
+                    <label
+                      ><input type="radio" name="Gender" value="Female" />
+                      Female</label
+                    >
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <strong>Hourly Rate</strong>
+                  <input
+                    type="number"
+                    name="Hourly Rate"
+                    placeholder="30-100"
+                    required
+                    min="30"
+                    max="100"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Job Involvement</strong>
+                  <input
+                    type="number"
+                    name="Job Involvement"
+                    placeholder="1-4"
+                    required
+                    min="1"
+                    max="4"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Job Level</strong>
+                  <input
+                    type="number"
+                    name="Job Level"
+                    placeholder="1-5"
+                    required
+                    min="1"
+                    max="5"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Job Satisfaction</strong>
+                  <input
+                    type="number"
+                    name="Job Satisfaction"
+                    placeholder="1-4"
+                    required
+                    min="1"
+                    max="4"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Monthly Income</strong>
+                  <input
+                    type="number"
+                    name="Monthly Income"
+                    placeholder="1000-20000"
+                    required
+                    min="1000"
+                    max="20000"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Number of Companies Worked in</strong>
+                  <input
+                    type="number"
+                    name="Number of Companies Worked in"
+                    placeholder="0-9"
+                    required
+                    min="1"
+                    max="9"
+                  />
+                </div>
+              </div>
+
+              <!-- Right Column -->
+              <div class="column">
+                <div class="form-group">
+                  <strong>Department</strong>
+                  <div class="radio-group">
+                    <label
+                      ><input
+                        type="radio"
+                        name="Department"
+                        value="Research & Development"
+                      />
+                      R&D</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Department"
+                        value="Human Resources"
+                      />
+                      HR</label
+                    >
+                    <label
+                      ><input type="radio" name="Department" value="Sales" />
+                      Sales</label
+                    >
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <strong>Education Field</strong>
+                  <div class="radio-group">
+                    <label
+                      ><input
+                        type="radio"
+                        name="Education Field"
+                        value="Life Sciences"
+                      />
+                      Life Sciences</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Education Field"
+                        value="Medical"
+                      />
+                      Medical</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Education Field"
+                        value="Marketing"
+                      />
+                      Marketing</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Education Field"
+                        value="Technical Degree"
+                      />
+                      Technical Degree</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Education Field"
+                        value="Human Resources"
+                      />
+                      Human Resources</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Education Field"
+                        value="Other"
+                      />
+                      Other</label
+                    >
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <strong>Job Role</strong>
+                  <div class="radio-group">
+                    <label
+                      ><input
+                        type="radio"
+                        name="Job Role"
+                        value="Sales Executive"
+                      />
+                      Sales Executive</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Job Role"
+                        value="Research Scientist"
+                      />
+                      Research Scientist</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Job Role"
+                        value="Laboratory Technician"
+                      />
+                      Laboratory Technician</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Job Role"
+                        value="Manufacturing Director"
+                      />
+                      Manufacturing Director</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Job Role"
+                        value="Healthcare Representative"
+                      />
+                      Healthcare Representative</label
+                    >
+                    <label
+                      ><input type="radio" name="Job Role" value="Manager" />
+                      Manager</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Job Role"
+                        value="Sales Representative"
+                      />
+                      Sales Representative</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Job Role"
+                        value="Research Director"
+                      />
+                      Research Director</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Job Role"
+                        value="Human Resources"
+                      />
+                      Human Resources</label
+                    >
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <strong>Marital Status</strong>
+                  <div class="radio-group">
+                    <label
+                      ><input
+                        type="radio"
+                        name="Marital Status"
+                        value="Married"
+                      />
+                      Married</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Marital Status"
+                        value="Single"
+                      />
+                      Single</label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="Marital Status"
+                        value="Divorced"
+                      />
+                      Divorced</label
+                    >
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <strong>Over Time</strong>
+                  <div class="radio-group">
+                    <label
+                      ><input type="radio" name="Over Time" value="Yes" />
+                      Yes</label
+                    >
+                    <label
+                      ><input type="radio" name="Over Time" value="No" />
+                      No</label
+                    >
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <strong>Performance Rating</strong>
+                  <input
+                    type="number"
+                    name="Performance Rating"
+                    placeholder="1-4"
+                    required
+                    min="1"
+                    max="4"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Relationship Satisfaction</strong>
+                  <input
+                    type="number"
+                    name="Relationship Satisfaction"
+                    placeholder="1-4"
+                    required
+                    min="1"
+                    max="4"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Stock Option Level</strong>
+                  <input
+                    type="number"
+                    name="Stock Option Level"
+                    placeholder="0-3"
+                    required
+                    min="0"
+                    max="3"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Total Working Years</strong>
+                  <input
+                    type="number"
+                    name="Total Working Years"
+                    placeholder="0-40"
+                    required
+                    min="0"
+                    max="40"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Training Times Last Year</strong>
+                  <input
+                    type="number"
+                    name="Training Times Last Year"
+                    placeholder="0-6"
+                    required
+                    min="0"
+                    max="6"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Work Life Balance</strong>
+                  <input
+                    type="number"
+                    name="Work Life Balance"
+                    placeholder="1-4"
+                    required
+                    min="1"
+                    max="4"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Years At Company</strong>
+                  <input
+                    type="number"
+                    name="Years At Company"
+                    placeholder="0-40"
+                    required
+                    min="0"
+                    max="40"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Years In Current Role</strong>
+                  <input
+                    type="number"
+                    name="Years In Current Role"
+                    placeholder="0-18"
+                    required
+                    min="0"
+                    max="18"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Years Since Last Promotion</strong>
+                  <input
+                    type="number"
+                    name="Years Since Last Promotion"
+                    placeholder="0-15"
+                    required
+                    min="0"
+                    max="15"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <strong>Years With Curr Manager</strong>
+                  <input
+                    type="number"
+                    name="Years With Curr Manager"
+                    placeholder="0-17"
+                    required
+                    min="0"
+                    max="17"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-predict">Predict Attrition</button>
+          </form>
+
+          <div class="prediction-result">{{ prediction_text }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <!-- Material Icons -->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <!-- Footer -->
+    <footer class="bg-blue-900 text-white py-10 mt-12">
+      <div class="container mx-auto px-6 lg:px-16">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <!-- Useful Links -->
+          <div>
+            <h3 class="text-lg font-semibold text-blue-300">Useful Links</h3>
+            <ul class="mt-2 space-y-2">
+              <li><a href="#" class="hover:text-blue-400">Home</a></li>
+              <li><a href="#" class="hover:text-blue-400">Products</a></li>
+              <li><a href="#" class="hover:text-blue-400">About Us</a></li>
+              <li><a href="#" class="hover:text-blue-400">FAQ</a></li>
+              <li>
+                <a href="#" class="hover:text-blue-400">Privacy Policy</a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Opening Hours & Locations -->
+          <div>
+            <h3 class="text-lg font-semibold text-blue-300">Opening Hours</h3>
+            <p class="mt-2">Mon-Sat: 9:00 AM - 9:30 PM</p>
+            <p>Sunday: 9:00 AM - 3:00 PM</p>
+
+            <h3 class="text-lg font-semibold text-blue-300 mt-4">Locations</h3>
+            <p class="mt-2">Mumbai, Maharashtra</p>
+            <p>Navi Mumbai, Thane</p>
+          </div>
+
+          <!-- Contact & Social Links -->
+          <div>
+            <h3 class="text-lg font-semibold text-blue-300">Need Help?</h3>
+            <p class="mt-2">+91 8591245402</p>
+            <p>+91 8591245402</p>
+            <p class="mt-2">support@recruitease.com</p>
+
+            <h3 class="text-lg font-semibold text-blue-300 mt-4">Follow Us</h3>
+            <ul class="mt-2 space-y-2">
+              <li><a href="#" class="hover:text-blue-400">Facebook</a></li>
+              <li><a href="#" class="hover:text-blue-400">Instagram</a></li>
+              <li><a href="#" class="hover:text-blue-400">LinkedIn</a></li>
+              <li><a href="#" class="hover:text-blue-400">Twitter</a></li>
+              <li><a href="#" class="hover:text-blue-400">WhatsApp</a></li>
+            </ul>
+          </div>
+
+          <!-- Newsletter -->
+          <div>
+            <h3 class="text-lg font-semibold text-blue-300">Newsletter</h3>
+            <p class="mt-2 text-gray-300">
+              Subscribe to our newsletter for weekly news, updates, helpful
+              tips, and exclusive offers.
+            </p>
+            <div class="mt-4 flex">
+              <input
+                type="email"
+                placeholder="Your email"
+                class="w-full px-4 py-2 rounded-l bg-blue-800 border border-blue-600 focus:outline-none"
+              />
+              <button
+                class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-r text-white"
+              >
+                Subscribe
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="text-center text-gray-300 mt-8">
+          &copy; 2025 RecruitEase | All Rights Reserved
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
